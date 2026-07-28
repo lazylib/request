@@ -1,0 +1,50 @@
+# golangci-lint configuration for lazylib/request.
+#
+# Why this file exists: golangci-lint v2 enables a strict set of
+# linters by default when no config is present. Local `go vet` /
+# `gofmt` invocations do not exercise that set, so without a committed
+# config, "passes locally" and "passes on CI" can disagree.
+#
+# This file pins the linter set so both environments are identical.
+# Bump it deliberately, never silently.
+
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  # v2 default preset: errcheck, govet, ineffassign, staticcheck, unused.
+  default: standard
+  # Add a few extras that catch real bugs in HTTP code.
+  enable:
+    - bodyclose     # ensures http.Response.Body is closed
+    - errorlint     # error-wrapping conventions (errors.Is/As)
+    - nilerr        # returning nil after handling err
+    - prealloc      # slice pre-allocation hints
+    - unconvert     # redundant conversions
+    - unparam       # unused function parameters
+    - gocritic      # opinionated style + perf
+  disable:
+    - dupl          # duplicate-code: not useful at this size
+    - funlen        # function length: subjective
+    - gocognit      # cognitive complexity: subjective
+    - gocyclo       # cyclomatic complexity: subjective
+    - mnd           # magic numbers: we use small numeric literals in tests
+    - testpackage   # we use the same package name in tests on purpose
+    - wsl           # whitespace style: defer to gofmt
+
+  exclusions:
+    # Test files may legitimately use t.Errorf/_ = patterns.
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gocritic
+          - prealloc
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  show-stats: true
