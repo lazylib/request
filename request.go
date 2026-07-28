@@ -81,7 +81,7 @@ func Send[T any](opts Options) (*T, error) {
 	if err != nil {
 		return nil, fmt.Errorf("request: send: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("request: server responded with status %d", resp.StatusCode)
