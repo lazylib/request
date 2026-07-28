@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/lazylib/request)](go.mod)
 
-> One generic function for "JSON in, typed Go out" over HTTP. No dependencies. No boilerplate.
+> A small, dependency-free Go toolkit for REST/JSON HTTP APIs. Typed `Send` and `SendX` helpers, pluggable auth, raw-body support — composed from focused building blocks rather than a mega-client.
 
 ```go
 result, err := request.Send[User](request.Options{
@@ -21,7 +21,7 @@ if err != nil {
 fmt.Println(result.Name)
 ```
 
-That is the whole API. Drop it into any Go project that talks to JSON HTTP APIs.
+`Send` for the err-returning case, `SendX` for the panic-on-failure case. Same `Options`, same JSON handling, same auth — pick the one that fits the call site.
 
 ---
 
@@ -29,12 +29,14 @@ That is the whole API. Drop it into any Go project that talks to JSON HTTP APIs.
 
 Every Go project that calls a JSON HTTP API eventually rewrites the same
 helper: build a request, set headers, marshal the body, send it, check the
-status, decode the response, return the error. `lazylib/request` is that
-helper, battle-tested and zero-dependency.
+status, decode the response, return the error. `lazylib/request` ships
+that helper — and a few siblings — battle-tested and zero-dependency, so
+you can stop writing it again.
 
 | What you want                                  | What you write                                |
 | ---------------------------------------------- | --------------------------------------------- |
 | GET JSON, decode into struct                   | `request.Send[T](Options{Method: GET, Url: …})` |
+| Same as above, but panic on failure            | `request.SendX[T](Options{…})`                |
 | POST struct as JSON                            | pass `Body: myStruct`                         |
 | POST raw bytes / stream                        | pass `Body: []byte` or `io.Reader`            |
 | HTTP Basic                                     | `Auth: &BasicAuth{User, Pass}`                |
@@ -142,6 +144,25 @@ Returns an error if:
 - the server replies with a non-2xx status — error message includes the status code
 - the response body cannot be decoded as JSON
 - for `204 No Content` / empty bodies, returns `(nil, nil)` — no need to special-case
+
+### `SendX[T any](opts Options) *T`
+
+The panicking variant of [`Send`](#sendt-anyopts-options-t-error). Calls
+`Send[T]` and panics with the returned error if it is non-nil. Useful
+when an HTTP failure is a programmer error or process-fatal condition
+(similar to `regexp.MustCompile` or `template.Must`).
+
+```go
+config := request.SendX[Config](request.Options{
+    Method: http.MethodGet,
+    Url:    "https://api.example.com/config",
+    Auth:   request.BearerAuth{Token: token},
+})
+// config is *Config, never nil, no error to check.
+```
+
+For most code paths, prefer [`Send`](#sendt-anyopts-options-t-error) and
+return the error.
 
 ### `Options`
 
@@ -256,9 +277,11 @@ Runnable examples live in [`./examples`](./examples). They cover:
 
 ## Project status
 
-Stable. Used in production. The API is small enough that breaking changes
-are unlikely — anything new is added via the `Auth` interface and the
-`Options` struct without touching existing call sites.
+Active. The toolkit grows by adding small, focused helpers on top of
+the same `Options` and `Auth` primitives — `Send` and `SendX` today,
+more building blocks over time. The public surface is designed to be
+backwards-compatible across minor versions: new helpers are additive,
+and existing call sites are not expected to change.
 
 ## Contributing
 

@@ -1,8 +1,16 @@
-// Package request is a tiny, dependency-free Go helper for sending HTTP
-// requests and decoding JSON responses into a typed value.
+// Package request is a small, dependency-free Go toolkit for working with
+// REST/JSON HTTP APIs. It grows by adding focused, composable helpers
+// rather than shipping a single mega-client.
 //
-// It is designed for the common case: call an HTTP API, get JSON back, work
-// with a struct. The whole surface area is a single generic function:
+// The current public surface is intentionally small:
+//
+//   - [Send] — generic JSON in / typed Go out for any HTTP call.
+//   - [SendX] — the panicking variant of [Send], for cases where a
+//     non-2xx response is a programmer error or process-fatal condition.
+//   - [Options], [Auth], [BasicAuth], [BearerAuth] — the configuration
+//     types both helpers build on.
+//
+// A typical call looks like:
 //
 //	result, err := request.Send[MyResponse](request.Options{
 //	    Method: http.MethodPost,
@@ -12,16 +20,17 @@
 //	    Auth:   request.BearerAuth{Token: token},
 //	})
 //
-// The package handles JSON encoding of the body, JSON decoding of the
-// response, non-2xx status codes, raw []byte / io.Reader payloads, and
-// pluggable auth schemes. It has no third-party dependencies and works on
-// Go 1.22+ (requires generics).
+// JSON encoding of the body, JSON decoding of the response, non-2xx
+// status codes, raw []byte / io.Reader payloads, and pluggable auth
+// schemes are all handled by [Send]. The package has no third-party
+// dependencies and works on Go 1.22+ (requires generics).
 //
 // # When to use this package
 //
-// Use it when stdlib net/http feels verbose and you don't need a full
-// client (retries, connection pooling, middleware). If you only need
-// "JSON in, JSON out", this is the entire API.
+// Use it when stdlib net/http feels verbose and you want typed JSON
+// responses without a full client (retries, connection pooling,
+// middleware). [Send] covers "JSON in, typed Go out"; [SendX] covers
+// the same case in a panic-on-failure form.
 //
 // # When NOT to use this package
 //

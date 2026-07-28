@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-28
+
+### Added
+
+- `SendX[T any](Options) *T` — panicking variant of `Send`. Calls
+  `Send[T]` and panics with the returned error if non-nil. Mirrors the
+  `Must`-style helpers in the Go standard library
+  (`regexp.MustCompile`, `template.Must`) and in entgo.io/ent.
+- `doc.go` package comment listing the current public surface.
+- README positioning updated from "one generic function" to "a small
+  toolkit of focused helpers".
+
+### Notes
+
+- No breaking changes. `Send`, `Options`, and `Auth` are unchanged.
+
 ## [0.1.0] - 2026-07-27
 
 ### Added
