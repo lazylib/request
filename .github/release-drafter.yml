@@ -1,0 +1,23 @@
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+version-resolver:
+  major:
+    labels: ["breaking"]
+  minor:
+    labels: ["enhancement"]
+  patch:
+    labels: ["bug", "documentation"]
+  default: minor
+categories:
+  - title: "🚨 Breaking changes"
+    labels: ["breaking"]
+  - title: "✨ Features"
+    labels: ["enhancement"]
+  - title: "🐛 Bug fixes"
+    labels: ["bug"]
+  - title: "📚 Documentation"
+    labels: ["documentation"]
+  - title: "🔧 Maintenance"
+    labels: ["dependencies", "chore"]
+change-template: "- $TITLE (#$NUMBER) @$AUTHOR"
+exclude-labels: ["skip-changelog"]
