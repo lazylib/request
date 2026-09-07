@@ -33,17 +33,17 @@ status, decode the response, return the error. `lazylib/request` ships
 that helper — and a few siblings — battle-tested and zero-dependency, so
 you can stop writing it again.
 
-| What you want                                  | What you write                                |
-| ---------------------------------------------- | --------------------------------------------- |
-| GET JSON, decode into struct                   | `request.Send[T](Options{Method: GET, Url: …})` |
-| Same as above, but panic on failure            | `request.SendX[T](Options{…})`                |
-| POST struct as JSON                            | pass `Body: myStruct`                         |
-| POST raw bytes / stream                        | pass `Body: []byte` or `io.Reader`            |
-| HTTP Basic                                     | `Auth: &BasicAuth{User, Pass}`                |
-| Bearer token                                   | `Auth: BearerAuth{Token: …}`                  |
-| Custom auth scheme                             | implement the `Auth` interface (2 lines)      |
-| Custom headers                                 | `Headers: map[string]string{…}`               |
-| Custom client / timeout / retries              | see [When NOT to use](#when-not-to-use)       |
+| What you want                       | What you write                                  |
+| ----------------------------------- | ----------------------------------------------- |
+| GET JSON, decode into struct        | `request.Send[T](Options{Method: GET, Url: …})` |
+| Same as above, but panic on failure | `request.SendX[T](Options{…})`                  |
+| POST struct as JSON                 | pass `Body: myStruct`                           |
+| POST raw bytes / stream             | pass `Body: []byte` or `io.Reader`              |
+| HTTP Basic                          | `Auth: &BasicAuth{User, Pass}`                  |
+| Bearer token                        | `Auth: BearerAuth{Token: …}`                    |
+| Custom auth scheme                  | implement the `Auth` interface (2 lines)        |
+| Custom headers                      | `Headers: map[string]string{…}`                 |
+| Custom client / timeout / retries   | see [When NOT to use](#when-not-to-use)         |
 
 ## Install
 
@@ -173,19 +173,20 @@ type Options struct {
     Body    any                // nil | struct/map | []byte | *bytes.Buffer | *bytes.Reader | io.Reader | string
     Headers map[string]string  // optional, merged on top of Content-Type for JSON bodies
     Auth    Auth               // optional, BasicAuth / BearerAuth / your own
+    Client  *http.Client       // custom client
 }
 ```
 
 **Body handling:**
 
-| Body type             | Sent as                          | Content-Type set     |
-| --------------------- | -------------------------------- | -------------------- |
-| `nil`                 | (empty)                          | (none)               |
-| `[]byte`              | raw                              | (none)               |
-| `*bytes.Buffer`/`*bytes.Reader` | raw                       | (none)               |
-| `io.Reader`           | raw                              | (none)               |
-| `string`              | raw                              | (none)               |
-| anything else         | `json.Marshal(body)`             | `application/json`   |
+| Body type                       | Sent as              | Content-Type set   |
+| ------------------------------- | -------------------- | ------------------ |
+| `nil`                           | (empty)              | (none)             |
+| `[]byte`                        | raw                  | (none)             |
+| `*bytes.Buffer`/`*bytes.Reader` | raw                  | (none)             |
+| `io.Reader`                     | raw                  | (none)             |
+| `string`                        | raw                  | (none)             |
+| anything else                   | `json.Marshal(body)` | `application/json` |
 
 If you set `Headers["Content-Type"]`, it overrides the automatic value.
 
