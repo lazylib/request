@@ -24,6 +24,7 @@ type Options struct {
 	Body    any
 	Headers map[string]string
 	Auth    Auth
+	Client  *http.Client
 }
 
 // Auth is implemented by any value that can apply credentials to an
@@ -77,7 +78,11 @@ func Send[T any](opts Options) (*T, error) {
 		opts.Auth.apply(req)
 	}
 
-	resp, err := (&http.Client{}).Do(req)
+	client := opts.Client
+	if client == nil {
+		client = http.DefaultClient
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request: send: %w", err)
 	}
