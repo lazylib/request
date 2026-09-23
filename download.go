@@ -55,3 +55,10 @@ func Download(opts Options, to string) error {
     }
     return nil
 }
+
+// DownloadX performs the same operation as Download but panics on error.
+func DownloadX(opts Options, to string) {
+    if err := Download(opts, to); err != nil {
+        panic(err)
+    }
+}
