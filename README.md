@@ -37,13 +37,70 @@ you can stop writing it again.
 | ----------------------------------- | ----------------------------------------------- |
 | GET JSON, decode into struct        | `request.Send[T](Options{Method: GET, Url: …})` |
 | Same as above, but panic on failure | `request.SendX[T](Options{…})`                  |
+| Download a file                     | `request.Download(Options{…}, "file.bin")`      |
+| One config for the whole app        | `api := request.New(Settings{…})`, then `api.Send[T]` |
 | POST struct as JSON                 | pass `Body: myStruct`                           |
 | POST raw bytes / stream             | pass `Body: []byte` or `io.Reader`              |
 | HTTP Basic                          | `Auth: &BasicAuth{User, Pass}`                  |
 | Bearer token                        | `Auth: BearerAuth{Token: …}`                    |
 | Custom auth scheme                  | implement the `Auth` interface (2 lines)        |
 | Custom headers                      | `Headers: map[string]string{…}`                 |
-| Custom client / timeout / retries   | see [When NOT to use](#when-not-to-use)         |
+
+## Config — one client for the whole app
+
+Applications that talk to one API usually need the same base URL, headers,
+auth and TLS setup on every call. Build a `Config` once, keep it in your
+own package-level variable (one per API, per environment, per region), and
+use it everywhere:
+
+```go
+// Custom TLS certificate + default auth — configure once…
+raw, err := os.ReadFile("certs/ca.pem")
+if err != nil {
+    log.Fatal(err)
+}
+pool := x509.NewCertPool()
+if !pool.AppendCertsFromPEM(raw) {
+    log.Fatal("bad CA certificate")
+}
+
+var api = request.New(request.Settings{
+    BaseURL: "https://api.internal.example.com/v1",
+    Auth:    request.BearerAuth{Token: os.Getenv("API_TOKEN")},
+    Headers: map[string]string{"X-Api-Key": os.Getenv("API_KEY")},
+    Client: &http.Client{
+        Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: pool}},
+    },
+})
+
+// …then every call site shrinks to Method/Url/Body.
+user, err := api.Send[User](request.Options{Method: http.MethodGet, Url: "/users/42"})
+```
+
+Need several environments? Just declare several configs — they are fully
+independent:
+
+```go
+var (
+    ru  = request.New(request.Settings{BaseURL: "https://ru.example.com", Auth: …})
+    www = request.New(request.Settings{BaseURL: "https://www.example.com", Auth: …})
+)
+
+ru.Send[User](request.Options{Method: http.MethodGet, Url: "/users/1"})
+www.Send[User](request.Options{Method: http.MethodGet, Url: "/users/1"})
+```
+
+**Methods:** `Config` exposes `Send[T]`, `SendX[T]`, `Download`,
+`DownloadX` — the same semantics as the package-level helpers, with the
+config's settings applied first.
+
+**Resolution rules** (values set directly in `Options` always win):
+
+- `Auth`, `Client` — used from `Settings` when the `Options` field is zero.
+- `Url` — relative paths are joined onto `Settings.BaseURL` (extra slashes
+  are collapsed); absolute URLs (containing `://`) bypass the base URL.
+- `Headers` — merged: `Settings.Headers` first, then `Options.Headers`,
+  which also overrides the automatic `Content-Type` for JSON bodies.
 
 ## Install
 
@@ -51,7 +108,7 @@ you can stop writing it again.
 go get github.com/lazylib/request
 ```
 
-Requires **Go 1.22+** (uses generics).
+Requires **Go 1.27+** (generic methods on Config).
 
 ## Quick start
 
@@ -189,6 +246,28 @@ type Options struct {
 | anything else                   | `json.Marshal(body)` | `application/json` |
 
 If you set `Headers["Content-Type"]`, it overrides the automatic value.
+
+### `New` / `Config` / `Settings`
+
+```go
+type Settings struct {
+    BaseURL string            // prepended to relative Url values
+    Headers map[string]string // added to every request, overridden by Options.Headers
+    Auth    Auth              // default auth, overridden by Options.Auth
+    Client  *http.Client      // custom client (TLS, timeouts), overridden by Options.Client
+}
+
+func New(settings Settings) Config // build a reusable client
+
+// Config methods — same semantics as the package-level helpers:
+//   Send[T any](opts Options) (*T, error)
+//   SendX[T any](opts Options) *T
+//   Download(opts Options, to string) error
+//   DownloadX(opts Options, to string)
+```
+
+See [Config](#config--one-client-for-the-whole-app) for a full example
+and resolution rules.
 
 ### `Auth` interface
 

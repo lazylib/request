@@ -1,6 +1,6 @@
 module github.com/lazylib/request/examples
 
-go 1.26.2
+go 1.27.0
 
 require github.com/lazylib/request v0.0.0
 

@@ -29,7 +29,11 @@ func Download(opts Options, to string) error {
 	if opts.Auth != nil {
 		opts.Auth.apply(req)
 	}
-	resp, err := (&http.Client{}).Do(req)
+	client := opts.Client
+	if client == nil {
+		client = http.DefaultClient
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("request: send: %w", err)
 	}

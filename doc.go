@@ -7,6 +7,11 @@
 //   - [Send] — generic JSON in / typed Go out for any HTTP call.
 //   - [SendX] — the panicking variant of [Send], for cases where a
 //     non-2xx response is a programmer error or process-fatal condition.
+//   - [Download] / [DownloadX] — save the response body to a file.
+//   - [New] / [Config] / [Settings] — build a reusable client with
+//     base URL, default headers and auth, and a custom http.Client
+//     (e.g. with custom TLS certificates); keep it in your own
+//     package-level variable and use it everywhere.
 //   - [Options], [Auth], [BasicAuth], [BearerAuth] — the configuration
 //     types both helpers build on.
 //
@@ -23,7 +28,7 @@
 // JSON encoding of the body, JSON decoding of the response, non-2xx
 // status codes, raw []byte / io.Reader payloads, and pluggable auth
 // schemes are all handled by [Send]. The package has no third-party
-// dependencies and works on Go 1.22+ (requires generics).
+// dependencies and works on Go 1.27+ (Config uses generic methods).
 //
 // # When to use this package
 //
