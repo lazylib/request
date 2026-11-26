@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Reusable client configuration: `New(Settings) Config` with `Send[T]`,
+  `SendX[T]`, `Download`, `DownloadX` methods. `Settings` carries
+  `BaseURL`, default `Headers`, default `Auth` and a custom `Client`
+  (custom TLS certificates, timeouts). Values set directly in `Options`
+  take precedence. Create as many independent configs as you like and
+  store them in your own package-level variables.
+- Fix: `Download` now honors `Options.Client` — previously it always used
+  a fresh `http.Client`, which made custom TLS setups silently ignored for
+  downloads.
+
 ## [0.2.0] - 2026-07-28
 
 ### Added
